@@ -1,0 +1,104 @@
+﻿@page "/gi"
+@using MySiteApp.Gi
+@using System.Text
+@inject GiSource Source
+
+<style>
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .grid-item {
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding-bottom: 5px;
+    background-color: #f9f9f9;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+  }
+
+    .grid-item:hover {
+      background-color: #eaeaea;
+    }
+
+    .grid-item img {
+      width: 150px;
+      height: 150px;
+      object-fit: contain; /* или cover, если нужно обрезать */
+      border-radius: 4px;
+    }
+
+  .caption {
+    margin-top: 8px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+</style>
+
+<h3>Genshin Impact</h3>
+
+@if (showLoad)
+{
+  <button class="btn btn-primary" @onclick="LoadPersons">Загрузить список персонажей</button>
+  <br />
+}
+@if (showBack)
+{
+  <button class="btn btn-primary" @onclick="BackClick">К списку персонажей</button>
+}
+
+@((MarkupString)Content)
+
+@if (showList)
+{
+  <div class="grid-container">
+    @foreach (var item in Items)
+    {
+      <div class="grid-item" @onclick="() => LoadPerson(item.Url)">
+        <img src="@($"https://genshin-info.ru{item.Icon}")" alt="@item.Title" />
+        <a href="@($"https://genshin-info.ru/wiki/personazhi/{item.Url}")" target="_blank">
+          <div class="caption">@item.Title</div>
+        </a>
+      </div>
+    }
+  </div>
+}
+
+
+@code {
+  private bool showList = false, showLoad = true, showBack = false;
+  private string? Content;
+  private List<ListItem> Items = new List<ListItem>();
+
+  private async void LoadPersons(MouseEventArgs args)
+  {
+    Content = "Загрузка...";
+    showLoad = false;
+    await Source.LoadData();
+    Items = await Source.LoadPersons();
+    Content = "";
+    showList = true;
+    StateHasChanged();
+  }
+
+  private async void LoadPerson(string url)
+  {
+    Content = "Загрузка...";
+    showList = false;
+    var p = await Source.LoadPerson(url);
+    //TODO
+    showBack = true;
+    Content = "";
+    StateHasChanged();
+  }
+
+  private void BackClick(MouseEventArgs args)
+  {
+    showList = true;
+    showBack = false;
+  }
+}

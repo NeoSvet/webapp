@@ -1,0 +1,56 @@
+﻿@inherits LayoutComponentBase
+@using MySiteApp.Account
+@using Microsoft.AspNetCore.Components.Authorization;
+@inject AuthenticationStateProvider AuthStateProvider
+@inject AuthStateProvider CustomAuth
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+
+<div class="page">
+  <div class="sidebar">
+    <NavMenu />
+  </div>
+
+  <main>
+    <div class="top-row px-4">
+      @if (userName == null)
+      {
+        <a href="/login">Войти</a>
+      }
+      else
+      {
+        <span class="mx-2">Здравствуйте, @userName!</span>
+        <a href="#" @onclick="Logout">Выход</a>
+      }
+    </div>
+
+    <article class="content px-4">
+      @Body
+    </article>
+  </main>
+</div>
+
+@code {
+  private string? userName;
+
+  protected override async Task OnInitializedAsync()
+  {
+    var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+    var user = authState.User;
+
+    if (user.Identity.IsAuthenticated)
+    {
+      userName = user.Identity.Name;
+      if (userName.StartsWith("Юрий"))
+        Navigation.NavigateTo("/gi");
+    }
+  }
+
+  private async Task Logout()
+  {
+    await JS.InvokeVoidAsync("localStorage.removeItem", "user");
+    CustomAuth.Logout();
+    Navigation.NavigateTo("/login", true);
+  }
+}

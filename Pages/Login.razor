@@ -1,0 +1,50 @@
+﻿@page "/login"
+
+@using System.Text.Json
+@using MySiteApp.Account
+@using MySiteApp.Service
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using Microsoft.AspNetCore.Components.Authorization;
+@inject AuthenticationStateProvider AuthStateProvider
+@inject WebService AuthService
+@inject NavigationManager Navigation
+@inject AuthStateProvider CustomAuth
+
+<h3>Авторизация</h3>
+
+<EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+  <DataAnnotationsValidator />
+  <ValidationSummary />
+
+  <InputText @bind-Value="loginModel.Login" placeholder="Логин" /><br />
+  <InputText @bind-Value="loginModel.Password" type="password" placeholder="Пароль" /><br />
+  <button class="btn btn-primary" type="submit">Войти</button>
+</EditForm>
+
+@if (errorMessage != null)
+{
+  <p style="color:red">@errorMessage</p>
+}
+
+@code {
+  private LoginRequest loginModel = new();
+  private string? errorMessage;
+
+  private async Task HandleLogin()
+  {
+    var user = await AuthService.LoginAsync(loginModel.Login, loginModel.Password);
+
+    if (user != null)
+    {
+      await JS.InvokeVoidAsync("localStorage.setItem", "user", JsonSerializer.Serialize(user));
+      CustomAuth.NotifyUserAuthentication(user);
+      Navigation.NavigateTo("/", true);
+    }
+    else
+    {
+      errorMessage = "Неверный логин или пароль";
+    }
+  }
+}

@@ -1,0 +1,66 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization;
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="top-row ps-3 navbar navbar-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="">MySiteApp</a>
+    <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+  <nav class="flex-column">
+    <div class="nav-item px-3">
+      <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+      </NavLink>
+    </div>
+    @if (isGi)
+    {
+      <div class="nav-item px-3">
+        <NavLink class="nav-link" href="gi">
+          <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> GI-Admin
+        </NavLink>
+      </div>
+    }
+    @if (isVna)
+    {
+      <div class="nav-item px-3">
+        <NavLink class="nav-link" href="vna">
+          <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> VNAdmin
+        </NavLink>
+      </div>
+    }
+  </nav>
+</div>
+
+@code {
+  private bool collapseNavMenu = true;
+
+  private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+  private void ToggleNavMenu()
+  {
+    collapseNavMenu = !collapseNavMenu;
+  }
+
+  private bool isGi;
+  private bool isVna;
+
+  protected override async Task OnInitializedAsync()
+  {
+    var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+    var user = authState.User;
+
+    if (user.IsInRole("Admin"))
+    {
+      isGi = true; isVna = true;
+    }
+    else if (user.IsInRole("VNA"))
+      isVna = true;
+    else if (user.IsInRole("GI"))
+      isGi = true;
+  }
+}
